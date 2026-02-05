@@ -547,12 +547,12 @@ namespace bgfx { namespace d3d12
 #endif // BX_PLATFORM_WINDOWS
 	}
 
-	ID3D12Resource* createCommittedResource(ID3D12Device* _device, HeapProperty::Enum _heapProperty, const D3D12_RESOURCE_DESC* _resourceDesc, const D3D12_CLEAR_VALUE* _clearValue, bool _memSet = false)
+	ID3D12Resource* createCommittedResource(ID3D12Device* _device, HeapProperty::Enum _heapProperty, const D3D12_RESOURCE_DESC* _resourceDesc, const D3D12_CLEAR_VALUE* _clearValue, bool _memSet = false, D3D12_HEAP_FLAGS _heapFlags = D3D12_HEAP_FLAG_NONE)
 	{
 		const HeapProperty& heapProperty = s_heapProperties[_heapProperty];
 		ID3D12Resource* resource;
 		DX_CHECK(_device->CreateCommittedResource(&heapProperty.m_properties
-			, D3D12_HEAP_FLAG_NONE
+			, _heapFlags
 			, _resourceDesc
 			, heapProperty.m_state
 			, _clearValue
@@ -581,7 +581,7 @@ namespace bgfx { namespace d3d12
 		return resource;
 	}
 
-	ID3D12Resource* createCommittedResource(ID3D12Device* _device, HeapProperty::Enum _heapProperty, uint64_t _size, D3D12_RESOURCE_FLAGS _flags = D3D12_RESOURCE_FLAG_NONE)
+	ID3D12Resource* createCommittedResource(ID3D12Device* _device, HeapProperty::Enum _heapProperty, uint64_t _size, D3D12_RESOURCE_FLAGS _flags = D3D12_RESOURCE_FLAG_NONE, D3D12_HEAP_FLAGS _heapFlags = D3D12_HEAP_FLAG_NONE)
 	{
 		D3D12_RESOURCE_DESC resourceDesc = {};
 		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -596,7 +596,7 @@ namespace bgfx { namespace d3d12
 		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		resourceDesc.Flags  = _flags;
 
-		return createCommittedResource(_device, _heapProperty, &resourceDesc, NULL);
+		return createCommittedResource(_device, _heapProperty, &resourceDesc, NULL, false, _heapFlags);
 	}
 
 	inline bool isLost(HRESULT _hr)
@@ -1630,6 +1630,7 @@ namespace bgfx { namespace d3d12
 					| BGFX_CAPS_VERTEX_ATTRIB_UINT10
 					| BGFX_CAPS_VERTEX_ID
 					| BGFX_CAPS_VIEWPORT_LAYER_ARRAY
+					| BGFX_CAPS_EXTERNAL_MEMORY
 					);
 				g_caps.limits.maxTextureSize     = D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION;
 				g_caps.limits.maxTextureLayers   = D3D12_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION;
@@ -2194,6 +2195,56 @@ namespace bgfx { namespace d3d12
 			DX_RELEASE(readback, 0);
 		}
 
+		void exportTexture(TextureHandle _handle, ExternalTextureInfo& info) override
+		{
+			TextureD3D12& texture = m_textures[_handle.idx];
+
+			D3D12_HEAP_FLAGS heapFlags;
+			HRESULT hr = texture.m_ptr->GetHeapProperties(NULL, &heapFlags);
+			if (FAILED(hr) )
+			{
+				BX_TRACE("GetHeapProperties error (HRESULT 0x%08x).", hr);
+				return;
+			}
+
+			if (0 == (heapFlags & D3D12_HEAP_FLAG_SHARED) )
+			{
+				BX_TRACE("Failed to export texture: heap is not shared.");
+				return;
+			}
+
+			HANDLE handle;
+			hr = m_device->CreateSharedHandle(
+				  (ID3D12DeviceChild*)texture.m_ptr
+				, NULL
+				, GENERIC_ALL
+				, NULL
+				, &handle
+				);
+			if (FAILED(hr) )
+			{
+				BX_TRACE("CreateSharedHandle error (HRESULT 0x%08x).", hr);
+				return;
+			}
+
+			bx::memSet(&info, 0, sizeof(info));
+			info.handle = (void*)(uintptr_t)handle;
+		}
+
+		void importTexture(TextureHandle _handle, const ExternalTextureInfo& _info) override
+		{
+			TextureD3D12& texture = m_textures[_handle.idx];
+
+			GUID ID3D12Resource_IID = { 0x696442BE, 0xA72E, 0x4059, 0xBC, 0x79, 0x5B, 0x5C, 0x98, 0x04, 0x0F, 0xAD };
+
+			HRESULT hr = m_device->OpenSharedHandle((HANDLE)(uintptr_t)_info.handle, ID3D12Resource_IID, (void**)&texture.m_ptr);
+			if (FAILED(hr) )
+			{
+				BX_TRACE("OpenSharedHandle error (HRESULT 0x%08x).", hr);
+				return;
+			}
+		}
+
 		void resizeTexture(TextureHandle _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, uint16_t _numLayers) override
 		{
 			TextureD3D12& texture = m_textures[_handle.idx];
@@ -2421,7 +2472,7 @@ namespace bgfx { namespace d3d12
 				break;
 
 			case Handle::Texture:
-				setDebugObjectName(m_textures[_handle.idx].m_ptr, "%.*s", _len, _name);
+//				setDebugObjectName(m_textures[_handle.idx].m_ptr, "%.*s", _len, _name);
 				break;
 
 			case Handle::VertexBuffer:
@@ -5451,6 +5502,8 @@ namespace bgfx { namespace d3d12
 			const bool computeWrite = 0 != (m_flags&BGFX_TEXTURE_COMPUTE_WRITE);
 			const bool renderTarget = 0 != (m_flags&BGFX_TEXTURE_RT_MASK);
 			const bool blit         = 0 != (m_flags&BGFX_TEXTURE_BLIT_DST);
+			const bool externExport = 0 != (m_flags&BGFX_TEXTURE_EXPORT);
+			const bool externImport = 0 != (m_flags&BGFX_TEXTURE_IMPORT);
 
 			const uint32_t msaaQuality = bx::uint32_satsub((m_flags & BGFX_TEXTURE_RT_MSAA_MASK) >> BGFX_TEXTURE_RT_MSAA_SHIFT, 1);
 			const DXGI_SAMPLE_DESC& msaa = s_msaa[msaaQuality];
@@ -5720,7 +5773,12 @@ namespace bgfx { namespace d3d12
 				break;
 			}
 
-			m_ptr = createCommittedResource(device, HeapProperty::Texture, &resourceDesc, clearValue, renderTarget);
+			if (externImport)
+			{
+				return NULL;
+			}
+
+			m_ptr = createCommittedResource(device, HeapProperty::Texture, &resourceDesc, clearValue, renderTarget, externExport ? D3D12_HEAP_FLAG_SHARED : D3D12_HEAP_FLAG_NONE);
 
 			if (directAccess)
 			{
@@ -5960,7 +6018,7 @@ namespace bgfx { namespace d3d12
 
 	D3D12_RESOURCE_STATES TextureD3D12::setState(ID3D12GraphicsCommandList* _commandList, D3D12_RESOURCE_STATES _state)
 	{
-		if (m_state != _state)
+		if (m_state != _state && m_ptr != NULL)
 		{
 			setResourceBarrier(_commandList
 				, m_ptr
@@ -6090,7 +6148,7 @@ namespace bgfx { namespace d3d12
 				{
 					const TextureD3D12& texture = s_renderD3D12->m_textures[at.handle.idx];
 
-					if (0 == m_width)
+					if (0 == m_width && texture.m_ptr != NULL)
 					{
 						D3D12_RESOURCE_DESC desc = getResourceDesc(texture.m_ptr);
 						m_width  = uint32_t(desc.Width);

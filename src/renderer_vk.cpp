@@ -17,6 +17,10 @@
 #	import <Metal/Metal.h>
 #endif // BX_PLATFORM_OSX
 
+#if BX_PLATFORM_LINUX
+#	include <drm/drm_fourcc.h>
+#endif
+
 namespace bgfx { namespace vk
 {
 	static char s_viewName[BGFX_CONFIG_MAX_VIEWS][BGFX_CONFIG_MAX_VIEW_NAME];
@@ -295,6 +299,147 @@ VK_IMPORT_DEVICE
 	};
 	static_assert(TextureFormat::Count == BX_COUNTOF(s_textureFormat) );
 
+#if BX_PLATFORM_LINUX
+	uint32_t getDrmFormat(VkFormat _format)
+	{
+		switch (_format)
+		{
+		case VK_FORMAT_A1R5G5B5_UNORM_PACK16:
+			return DRM_FORMAT_ARGB1555;
+		case VK_FORMAT_A2B10G10R10_UNORM_PACK32:
+			return DRM_FORMAT_ABGR2101010;
+		case VK_FORMAT_ASTC_10x10_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_10x10_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_10x5_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_10x5_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_10x6_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_10x6_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_10x8_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_10x8_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_12x10_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_12x10_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_12x12_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_12x12_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_4x4_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_4x4_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_5x4_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_5x4_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_5x5_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_5x5_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_6x5_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_6x5_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_6x6_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_6x6_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_8x5_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_8x5_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_8x6_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_8x6_UNORM_BLOCK:
+		case VK_FORMAT_ASTC_8x8_SRGB_BLOCK:
+		case VK_FORMAT_ASTC_8x8_UNORM_BLOCK:
+		case VK_FORMAT_B10G11R11_UFLOAT_PACK32:
+			return DRM_FORMAT_INVALID;
+		case VK_FORMAT_B4G4R4A4_UNORM_PACK16:
+			return DRM_FORMAT_BGRA4444;
+		case VK_FORMAT_B5G6R5_UNORM_PACK16:
+			return DRM_FORMAT_BGR565;
+		case VK_FORMAT_B8G8R8A8_SRGB:
+		case VK_FORMAT_B8G8R8A8_UNORM:
+			return DRM_FORMAT_BGRA8888;
+		case VK_FORMAT_BC1_RGB_SRGB_BLOCK:
+		case VK_FORMAT_BC1_RGB_UNORM_BLOCK:
+		case VK_FORMAT_BC2_SRGB_BLOCK:
+		case VK_FORMAT_BC2_UNORM_BLOCK:
+		case VK_FORMAT_BC3_SRGB_BLOCK:
+		case VK_FORMAT_BC3_UNORM_BLOCK:
+		case VK_FORMAT_BC4_UNORM_BLOCK:
+		case VK_FORMAT_BC5_UNORM_BLOCK:
+		case VK_FORMAT_BC6H_SFLOAT_BLOCK:
+		case VK_FORMAT_BC7_SRGB_BLOCK:
+		case VK_FORMAT_BC7_UNORM_BLOCK:
+			return DRM_FORMAT_INVALID;
+		case VK_FORMAT_D16_UNORM:
+			return DRM_FORMAT_R16;
+		case VK_FORMAT_D32_SFLOAT:
+			return DRM_FORMAT_R32F;
+		case VK_FORMAT_D32_SFLOAT_S8_UINT:
+		case VK_FORMAT_E5B9G9R9_UFLOAT_PACK32:
+		case VK_FORMAT_EAC_R11G11_SNORM_BLOCK:
+		case VK_FORMAT_EAC_R11G11_UNORM_BLOCK:
+		case VK_FORMAT_EAC_R11_SNORM_BLOCK:
+		case VK_FORMAT_EAC_R11_UNORM_BLOCK:
+		case VK_FORMAT_ETC2_R8G8B8A1_SRGB_BLOCK:
+		case VK_FORMAT_ETC2_R8G8B8A1_UNORM_BLOCK:
+		case VK_FORMAT_ETC2_R8G8B8A8_SRGB_BLOCK:
+		case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK:
+		case VK_FORMAT_ETC2_R8G8B8_SRGB_BLOCK:
+		case VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:
+		case VK_FORMAT_R16G16B16A16_SFLOAT:
+		case VK_FORMAT_R16G16B16A16_SINT:
+		case VK_FORMAT_R16G16B16A16_SNORM:
+		case VK_FORMAT_R16G16B16A16_UINT:
+		case VK_FORMAT_R16G16B16A16_UNORM:
+		case VK_FORMAT_R16G16_SFLOAT:
+			return DRM_FORMAT_INVALID;
+		case VK_FORMAT_R16G16_SINT:
+		case VK_FORMAT_R16G16_SNORM:
+		case VK_FORMAT_R16G16_UINT:
+		case VK_FORMAT_R16G16_UNORM:
+			return DRM_FORMAT_RG1616;
+		case VK_FORMAT_R16_SFLOAT:
+			return DRM_FORMAT_R16F;
+		case VK_FORMAT_R16_SINT:
+		case VK_FORMAT_R16_SNORM:
+		case VK_FORMAT_R16_UINT:
+		case VK_FORMAT_R16_UNORM:
+			return DRM_FORMAT_R16;
+		case VK_FORMAT_R32G32B32A32_SFLOAT:
+		case VK_FORMAT_R32G32B32A32_SINT:
+		case VK_FORMAT_R32G32B32A32_UINT:
+		case VK_FORMAT_R32G32_SFLOAT:
+		case VK_FORMAT_R32G32_SINT:
+		case VK_FORMAT_R32G32_UINT:
+			return DRM_FORMAT_INVALID;
+		case VK_FORMAT_R32_SFLOAT:
+			return DRM_FORMAT_R32F;
+		case VK_FORMAT_R32_SINT:
+		case VK_FORMAT_R32_UINT:
+			return DRM_FORMAT_INVALID;
+		case VK_FORMAT_R4G4B4A4_UNORM_PACK16:
+			return DRM_FORMAT_RGBA4444;
+		case VK_FORMAT_R5G6B5_UNORM_PACK16:
+			return DRM_FORMAT_RGB565;
+		case VK_FORMAT_R8G8B8A8_SINT:
+		case VK_FORMAT_R8G8B8A8_SNORM:
+		case VK_FORMAT_R8G8B8A8_SRGB:
+		case VK_FORMAT_R8G8B8A8_UINT:
+		case VK_FORMAT_R8G8B8A8_UNORM:
+			return DRM_FORMAT_RGBA8888;
+		case VK_FORMAT_R8G8B8_SINT:
+		case VK_FORMAT_R8G8B8_SNORM:
+		case VK_FORMAT_R8G8B8_SRGB:
+		case VK_FORMAT_R8G8B8_UINT:
+		case VK_FORMAT_R8G8B8_UNORM:
+			return DRM_FORMAT_RGB888;
+		case VK_FORMAT_R8G8_SINT:
+		case VK_FORMAT_R8G8_SNORM:
+		case VK_FORMAT_R8G8_SRGB:
+		case VK_FORMAT_R8G8_UINT:
+		case VK_FORMAT_R8G8_UNORM:
+			return DRM_FORMAT_RG88;
+		case VK_FORMAT_R8_SINT:
+		case VK_FORMAT_R8_SNORM:
+		case VK_FORMAT_R8_SRGB:
+		case VK_FORMAT_R8_UINT:
+		case VK_FORMAT_R8_UNORM:
+		case VK_FORMAT_S8_UINT:
+			return DRM_FORMAT_R8;
+		case VK_FORMAT_UNDEFINED:
+		default:
+			return DRM_FORMAT_INVALID;
+		}
+	};
+#endif
+
 	struct ImageTest
 	{
 		VkImageType        type;
@@ -391,8 +536,11 @@ VK_IMPORT_DEVICE
 			KHR_wayland_surface,
 			KHR_xlib_surface,
 			KHR_xcb_surface,
+			KHR_external_memory_fd,
+			EXT_image_drm_format_modifier,
 #	elif BX_PLATFORM_WINDOWS
 			KHR_win32_surface,
+			KHR_external_memory_win32,
 #	elif BX_PLATFORM_OSX
 			MVK_macos_surface,
 #	elif BX_PLATFORM_NX
@@ -414,28 +562,31 @@ VK_IMPORT_DEVICE
 	//
 	static Extension s_extension[] =
 	{
-		{ "VK_EXT_conservative_rasterization",      1, false, false, true,                                                          Layer::Count },
-		{ "VK_EXT_custom_border_color",             1, false, false, true,                                                          Layer::Count },
-		{ "VK_EXT_debug_report",                    1, false, false, false,                                                         Layer::Count },
-		{ "VK_EXT_debug_utils",                     1, false, false, BGFX_CONFIG_DEBUG_OBJECT_NAME || BGFX_CONFIG_DEBUG_ANNOTATION, Layer::Count },
-		{ "VK_EXT_line_rasterization",              1, false, false, true,                                                          Layer::Count },
-		{ "VK_EXT_memory_budget",                   1, false, false, true,                                                          Layer::Count },
-		{ "VK_EXT_shader_viewport_index_layer",     1, false, false, true,                                                          Layer::Count },
-		{ "VK_KHR_draw_indirect_count",             1, false, false, true,                                                          Layer::Count },
-		{ "VK_KHR_fragment_shading_rate",           1, false, false, true,                                                          Layer::Count },
-		{ "VK_KHR_get_physical_device_properties2", 1, false, false, true,                                                          Layer::Count },
+		{ "VK_EXT_conservative_rasterization",             1, false, false, true,                                                          Layer::Count },
+		{ "VK_EXT_custom_border_color",                    1, false, false, true,                                                          Layer::Count },
+		{ "VK_EXT_debug_report",                           1, false, false, false,                                                         Layer::Count },
+		{ "VK_EXT_debug_utils",                            1, false, false, BGFX_CONFIG_DEBUG_OBJECT_NAME || BGFX_CONFIG_DEBUG_ANNOTATION, Layer::Count },
+		{ "VK_EXT_line_rasterization",                     1, false, false, true,                                                          Layer::Count },
+		{ "VK_EXT_memory_budget",                          1, false, false, true,                                                          Layer::Count },
+		{ "VK_EXT_shader_viewport_index_layer",            1, false, false, true,                                                          Layer::Count },
+		{ "VK_KHR_draw_indirect_count",                    1, false, false, true,                                                          Layer::Count },
+		{ "VK_KHR_fragment_shading_rate",                  1, false, false, true,                                                          Layer::Count },
+		{ "VK_KHR_get_physical_device_properties2",        1, false, false, true,                                                          Layer::Count },
 #	if BX_PLATFORM_ANDROID
-		{ VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,    1, false, false, true,                                                          Layer::Count },
+		{ VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,           1, false, false, true,                                                          Layer::Count },
 #	elif BX_PLATFORM_LINUX
-		{ VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,    1, false, false, true,                                                          Layer::Count },
-		{ VK_KHR_XLIB_SURFACE_EXTENSION_NAME,       1, false, false, true,                                                          Layer::Count },
-		{ VK_KHR_XCB_SURFACE_EXTENSION_NAME,        1, false, false, true,                                                          Layer::Count },
+		{ VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,           1, false, false, true,                                                          Layer::Count },
+		{ VK_KHR_XLIB_SURFACE_EXTENSION_NAME,              1, false, false, true,                                                          Layer::Count },
+		{ VK_KHR_XCB_SURFACE_EXTENSION_NAME,               1, false, false, true,                                                          Layer::Count },
+		{ VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME,        1, false, false, true,                                                          Layer::Count },
+		{ VK_EXT_IMAGE_DRM_FORMAT_MODIFIER_EXTENSION_NAME, 2, false, false, true,                                                          Layer::Count },
 #	elif BX_PLATFORM_WINDOWS
-		{ VK_KHR_WIN32_SURFACE_EXTENSION_NAME,      1, false, false, true,                                                          Layer::Count },
+		{ VK_KHR_WIN32_SURFACE_EXTENSION_NAME,             1, false, false, true,                                                          Layer::Count },
+		{ VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME,     1, false, false, true,                                                          Layer::Count },
 #	elif BX_PLATFORM_OSX
-		{ VK_MVK_MACOS_SURFACE_EXTENSION_NAME,      1, false, false, true,                                                          Layer::Count },
+		{ VK_MVK_MACOS_SURFACE_EXTENSION_NAME,             1, false, false, true,                                                          Layer::Count },
 #	elif BX_PLATFORM_NX
-		{ VK_NN_VI_SURFACE_EXTENSION_NAME,          1, false, false, true,                                                          Layer::Count },
+		{ VK_NN_VI_SURFACE_EXTENSION_NAME,                 1, false, false, true,                                                          Layer::Count },
 #	endif
 	};
 	static_assert(Extension::Count == BX_COUNTOF(s_extension) );
@@ -1220,7 +1371,7 @@ VK_IMPORT_DEVICE
 			if (_init.debug
 			||  _init.profile)
 			{
-				m_renderDocDll = loadRenderDoc();
+				m_renderDocDll = NULL; // loadRenderDoc();
 			}
 
 			setGraphicsDebuggerPresent(false
@@ -1728,6 +1879,11 @@ VK_IMPORT_INSTANCE
 					| (s_extension[Extension::EXT_shader_viewport_index_layer].m_supported ? BGFX_CAPS_VIEWPORT_LAYER_ARRAY : 0)
 					| (s_extension[Extension::KHR_draw_indirect_count        ].m_supported && indirectDrawSupport ? BGFX_CAPS_DRAW_INDIRECT_COUNT : 0)
 					| (s_extension[Extension::KHR_fragment_shading_rate      ].m_supported ? BGFX_CAPS_VARIABLE_RATE_SHADING : 0)
+#if BX_PLATFORM_LINUX
+					| (s_extension[Extension::KHR_external_memory_fd].m_supported && s_extension[Extension::EXT_image_drm_format_modifier].m_supported ? BGFX_CAPS_EXTERNAL_MEMORY : 0)
+#elif BX_PLATFORM_WINDOWS
+					| (s_extension[Extension::KHR_external_memory_win32].m_supported ? BGFX_CAPS_EXTERNAL_MEMORY : 0)
+#endif
 					;
 
 				m_variableRateShadingSupported = s_extension[Extension::KHR_fragment_shading_rate].m_supported;
@@ -2454,6 +2610,77 @@ VK_IMPORT_DEVICE
 
 			vkDestroy(stagingBuffer);
 			recycleMemory(stagingMemory);
+		}
+
+		void exportTexture(TextureHandle _handle, ExternalTextureInfo &_info) override
+		{
+			TextureVK& texture = m_textures[_handle.idx];
+
+			bx::memSet(&_info, 0, sizeof(_info) );
+
+#if BX_PLATFORM_LINUX
+			if (!s_extension[Extension::KHR_external_memory_fd].m_supported)
+				return;
+			if (!s_extension[Extension::EXT_image_drm_format_modifier].m_supported)
+				return;
+
+			const uint32_t fourcc = getDrmFormat(texture.m_format);
+			if (fourcc == DRM_FORMAT_INVALID)
+			{
+				BX_TRACE("Cannot export texture: unsupported format (%.8x).", texture.m_format);
+				return;
+			}
+
+			VkMemoryGetFdInfoKHR fd_info;
+			fd_info.sType = VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR;
+			fd_info.pNext = NULL;
+			fd_info.memory = texture.m_textureDeviceMem.mem;
+			fd_info.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
+
+			int memFd = -1;
+			VK_CHECK(vkGetMemoryFdKHR(m_device, &fd_info, &memFd) );
+
+			VkImageDrmFormatModifierPropertiesEXT props;
+			props.sType = VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_PROPERTIES_EXT;
+			props.pNext = NULL;
+			VK_CHECK(vkGetImageDrmFormatModifierPropertiesEXT(m_device, texture.m_textureImage, &props) );
+
+			_info.fourcc   = fourcc;
+			_info.modifier = props.drmFormatModifier;
+			_info.handle   = (void *)(uintptr_t)memFd;
+#elif BX_PLATFORM_WINDOWS
+			if (!s_extension[Extension::KHR_external_memory_win32].m_supported)
+				return;
+
+			VkMemoryGetWin32HandleInfoKHR win32HandleInfo;
+			win32HandleInfo.sType      = VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR;
+			win32HandleInfo.pNext      = NULL;
+			win32HandleInfo.memory     = texture.m_textureDeviceMem.mem;
+			win32HandleInfo.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+
+			HANDLE memHandle;
+			VK_CHECK(vkGetMemoryWin32HandleKHR(m_device, &win32HandleInfo, &memHandle) );
+			BX_ASSERT(0 != memHandle, "Error");
+
+			_info.handle = (void*)(uintptr_t)memHandle;
+#endif
+
+			VkImageSubresource imgsub;
+			imgsub.aspectMask = VK_IMAGE_ASPECT_MEMORY_PLANE_0_BIT_EXT;
+			imgsub.mipLevel = 0;
+			imgsub.arrayLayer = 0;
+
+			VkSubresourceLayout layout;
+			vkGetImageSubresourceLayout(m_device, texture.m_textureImage, &imgsub, &layout);
+
+			_info.stride   = layout.rowPitch;
+			_info.offset   = layout.offset;
+			_info.size     = layout.size;
+		}
+
+		void importTexture(TextureHandle _handle, const ExternalTextureInfo& _info) override
+		{
+			m_textures[_handle.idx].import(m_commandBuffer, _info);
 		}
 
 		void resizeTexture(TextureHandle _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, uint16_t _numLayers) override
@@ -4474,7 +4701,7 @@ VK_IMPORT_DEVICE
 			return -1;
 		}
 
-		VkResult allocateMemory(const VkMemoryRequirements* requirements, VkMemoryPropertyFlags propertyFlags, DeviceMemoryAllocationVK* memory, bool _forcePrivateDeviceAllocation)
+		VkResult allocateMemory(const VkMemoryRequirements* requirements, VkMemoryPropertyFlags propertyFlags, DeviceMemoryAllocationVK* memory, bool _forcePrivateDeviceAllocation, void *pNext = NULL)
 		{
 			BGFX_PROFILER_SCOPE("RendererContextVK::allocateMemory", kColorResource);
 
@@ -4501,7 +4728,7 @@ VK_IMPORT_DEVICE
 
 			VkMemoryAllocateInfo ma;
 			ma.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-			ma.pNext = NULL;
+			ma.pNext = pNext;
 			ma.allocationSize = requirements->size;
 
 			VkResult result = VK_ERROR_UNKNOWN;
@@ -6329,7 +6556,7 @@ retry:
 		return result;
 	}
 
-	VkResult TextureVK::createImages(VkCommandBuffer _commandBuffer)
+	VkResult TextureVK::createImages(VkCommandBuffer _commandBuffer, const ExternalTextureInfo *_externalInfo)
 	{
 		BGFX_PROFILER_SCOPE("TextureVK::createImages", kColorResource);
 
@@ -6337,6 +6564,16 @@ retry:
 
 		const VkAllocationCallbacks* allocatorCb = s_renderVK->m_allocatorCb;
 		const VkDevice device = s_renderVK->m_device;
+		const VkPhysicalDevice physicalDevice = s_renderVK->m_physicalDevice;
+		bool exportTextureSupported = true
+#if BX_PLATFORM_LINUX
+			&& s_extension[Extension::KHR_external_memory_fd].m_supported
+			&& s_extension[Extension::EXT_image_drm_format_modifier].m_supported
+			&& vkGetImageDrmFormatModifierPropertiesEXT != NULL
+#elif BX_PLATFORM_WINDOWS
+			&& s_extension[Extension::KHR_external_memory_win32].m_supported
+#endif
+			;
 
 		if (m_sampler.Count > 1)
 		{
@@ -6386,7 +6623,169 @@ retry:
 			? VK_IMAGE_TYPE_3D
 			: VK_IMAGE_TYPE_2D
 			;
-		ici.tiling        = VK_IMAGE_TILING_OPTIMAL;
+		ici.tiling        = ((m_flags & (BGFX_TEXTURE_EXPORT|BGFX_TEXTURE_IMPORT)) && exportTextureSupported && BX_ENABLED(BX_PLATFORM_LINUX))
+			? VK_IMAGE_TILING_DRM_FORMAT_MODIFIER_EXT
+			: VK_IMAGE_TILING_OPTIMAL
+			;
+
+		// External texture.
+		uint64_t* drmModifier;
+		VkDrmFormatModifierPropertiesEXT* drmFmtModifiers;
+		VkImageDrmFormatModifierListCreateInfoEXT drmModListCi;
+		VkExternalMemoryImageCreateInfo extMemIci;
+		VkSubresourceLayout layout;
+		VkImageDrmFormatModifierExplicitCreateInfoEXT drmExplicitIci;
+		VkImportMemoryFdInfoKHR impMemFd;
+#if BX_PLATFORM_WINDOWS
+		VkImportMemoryWin32HandleInfoKHR impMemWin32;
+#endif
+		VkMemoryDedicatedAllocateInfo memDedicatedInfo;
+		VkExportMemoryAllocateInfo exportMemInfo;
+		void *memAllocNext = NULL;
+
+		if ((m_flags & (BGFX_TEXTURE_EXPORT|BGFX_TEXTURE_IMPORT)) && exportTextureSupported)
+		{
+			extMemIci.sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO;
+			extMemIci.pNext = NULL;
+
+#if BX_PLATFORM_LINUX
+			extMemIci.handleTypes = 0
+				| VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT
+				| VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT
+				;
+
+			// Read list of modifier properties.
+			VkDrmFormatModifierPropertiesListEXT drmFmtModPList = {}; // Export.
+			drmFmtModPList.sType = VK_STRUCTURE_TYPE_DRM_FORMAT_MODIFIER_PROPERTIES_LIST_EXT;
+			drmFmtModPList.pNext = NULL;
+			drmFmtModPList.drmFormatModifierCount = 0;
+			drmFmtModPList.pDrmFormatModifierProperties = NULL;
+
+			VkFormatProperties fmt;
+			fmt.linearTilingFeatures  = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT; // FIXME: ???
+			fmt.optimalTilingFeatures = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT; // FIXME: ???
+			fmt.bufferFeatures        = VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT; // FIXME: ???
+
+			VkFormatProperties2 fmt2;
+			fmt2.sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2;
+			fmt2.pNext = &drmFmtModPList;
+			fmt2.formatProperties = fmt;
+
+			vkGetPhysicalDeviceFormatProperties2KHR(physicalDevice, ici.format, &fmt2);
+			drmFmtModifiers = (VkDrmFormatModifierPropertiesEXT*)BX_STACK_ALLOC(sizeof(*drmFmtModifiers) * drmFmtModPList.drmFormatModifierCount);
+			drmFmtModPList.pDrmFormatModifierProperties = drmFmtModifiers;
+			drmModifier = (uint64_t*)BX_STACK_ALLOC(sizeof(*drmModifier) * drmFmtModPList.drmFormatModifierCount);
+			vkGetPhysicalDeviceFormatProperties2KHR(physicalDevice, m_format, &fmt2);
+
+			BX_TRACE("DRM modifiers (%d):", drmFmtModPList.drmFormatModifierCount);
+			for (uint32_t i = 0; i < drmFmtModPList.drmFormatModifierCount; ++i)
+			{
+				BX_TRACE("\t%.16" PRIx64, drmModifier[i]);
+				drmModifier[i] = drmFmtModifiers[i].drmFormatModifier;
+			}
+#elif BX_PLATFORM_WINDOWS
+			extMemIci.handleTypes = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+#endif
+
+			if (_externalInfo == NULL) // Prepare for export.
+			{
+#if BX_PLATFORM_LINUX
+				drmModListCi.sType = VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_LIST_CREATE_INFO_EXT;
+				drmModListCi.pNext = NULL;
+				drmModListCi.drmFormatModifierCount = drmFmtModPList.drmFormatModifierCount;
+				drmModListCi.pDrmFormatModifiers = drmModifier;
+
+				extMemIci.pNext = &drmModListCi;
+#endif
+				ici.pNext = &extMemIci;
+
+				memDedicatedInfo.sType  = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO;
+				memDedicatedInfo.pNext  = NULL;
+				memDedicatedInfo.image  = m_textureImage;
+				memDedicatedInfo.buffer = VK_NULL_HANDLE;
+
+				exportMemInfo.sType       = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO;
+				exportMemInfo.pNext       = &memDedicatedInfo;
+				exportMemInfo.handleTypes = extMemIci.handleTypes;
+
+				memAllocNext = &exportMemInfo;
+			}
+			else // Prepare for import.
+			{
+				layout.offset     = _externalInfo->offset;
+				layout.size       = _externalInfo->size;
+				layout.rowPitch   = _externalInfo->stride;
+				layout.arrayPitch = 0;
+				layout.depthPitch = 0;
+
+#if BX_PLATFORM_LINUX
+				uint32_t ii;
+
+				for (ii = 0; ii < drmFmtModPList.drmFormatModifierCount; ++ii)
+				{
+					if (drmModifier[ii] == _externalInfo->modifier)
+						break;
+				}
+				if (ii == drmFmtModPList.drmFormatModifierCount)
+				{
+					BX_TRACE("Create texture image error: no matching DRM modifier.");
+					return VK_ERROR_UNKNOWN;
+				}
+
+				VkPhysicalDeviceImageDrmFormatModifierInfoEXT drmFmt;
+				drmFmt.sType                 = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_DRM_FORMAT_MODIFIER_INFO_EXT;
+				drmFmt.pNext                 = NULL;
+				drmFmt.drmFormatModifier     = _externalInfo->modifier;
+				drmFmt.sharingMode           = VK_SHARING_MODE_EXCLUSIVE;
+				drmFmt.queueFamilyIndexCount = 0;
+				drmFmt.pQueueFamilyIndices   = NULL;
+
+				VkPhysicalDeviceImageFormatInfo2 phyImgFmt;
+				phyImgFmt.sType  = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2;
+				phyImgFmt.pNext  = &drmFmt;
+				phyImgFmt.format = m_format;
+				phyImgFmt.type   = VK_IMAGE_TYPE_2D;
+				phyImgFmt.tiling = ici.tiling;
+				phyImgFmt.usage  = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+				phyImgFmt.flags  = ici.flags;
+
+				VkImageFormatProperties2 imgP;
+				VkResult result = vkGetPhysicalDeviceImageFormatProperties2KHR(physicalDevice, &phyImgFmt, &imgP);
+				if (result != VK_SUCCESS)
+				{
+					BX_TRACE("Create texture image error: incompatible image format (%d: %s).", result, getName(result) );
+					return result;
+				}
+
+				drmExplicitIci.sType = VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_EXPLICIT_CREATE_INFO_EXT;
+				drmExplicitIci.pNext = NULL;
+				drmExplicitIci.drmFormatModifier = _externalInfo->modifier;
+				drmExplicitIci.drmFormatModifierPlaneCount = 1; // FIXME
+				drmExplicitIci.pPlaneLayouts = &layout;
+
+				extMemIci.pNext = &drmExplicitIci;
+
+				ici.pNext = &extMemIci;
+
+				impMemFd.sType      = VK_STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHR;
+				impMemFd.pNext      = NULL;
+				impMemFd.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
+				impMemFd.fd         = (int)(uintptr_t)_externalInfo->handle;
+
+				memAllocNext = &impMemFd;
+#elif BX_PLATFORM_WINDOWS
+				extMemIci.pNext = NULL;
+
+				impMemWin32.sType      = VK_STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_KHR;
+				impMemWin32.pNext      = NULL;
+				impMemWin32.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+				impMemWin32.handle     = (HANDLE)(uintptr_t)_externalInfo->handle;
+				impMemWin32.name       = NULL;
+
+				memAllocNext = &impMemWin32;
+#endif
+			}
+		}
 
 		result = vkCreateImage(device, &ici, allocatorCb, &m_textureImage);
 		if (VK_SUCCESS != result)
@@ -6398,7 +6797,7 @@ retry:
 		VkMemoryRequirements imageMemReq;
 		vkGetImageMemoryRequirements(device, m_textureImage, &imageMemReq);
 
-		result = s_renderVK->allocateMemory(&imageMemReq, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_textureDeviceMem, false);
+		result = s_renderVK->allocateMemory(&imageMemReq, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_textureDeviceMem, false, memAllocNext);
 		if (VK_SUCCESS != result)
 		{
 			BX_TRACE("Create texture image error: allocateMemory failed %d: %s.", result, getName(result) );
@@ -7001,6 +7400,11 @@ retry:
 
 		setImageMemoryBarrier(_commandBuffer, oldLayout);
 		setImageMemoryBarrier(_commandBuffer, oldSingleMsaaLayout, true);
+	}
+
+	void TextureVK::import(VkCommandBuffer _commandBuffer, const ExternalTextureInfo &_info)
+	{
+		createImages(_commandBuffer, &_info);
 	}
 
 	void TextureVK::copyBufferToTexture(VkCommandBuffer _commandBuffer, VkBuffer _stagingBuffer, uint32_t _bufferImageCopyCount, VkBufferImageCopy* _bufferImageCopy)

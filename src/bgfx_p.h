@@ -981,6 +981,8 @@ namespace bgfx
 			DestroyFrameBuffer,
 			DestroyUniform,
 			ReadTexture,
+			ExportTexture,
+			ImportTexture,
 		};
 
 		void resize(uint32_t _capacity = 0)
@@ -3639,6 +3641,8 @@ namespace bgfx
 		virtual void resizeTexture(TextureHandle _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, uint16_t _numLayers) = 0;
 		virtual void overrideInternal(TextureHandle _handle, uintptr_t _ptr, uint16_t _layerIndex) = 0;
 		virtual uintptr_t getInternal(TextureHandle _handle) = 0;
+		virtual void exportTexture(TextureHandle _handle, ExternalTextureInfo& _info) = 0;
+		virtual void importTexture(TextureHandle _handle, const ExternalTextureInfo& _info) = 0;
 		virtual void destroyTexture(TextureHandle _handle) = 0;
 		virtual void createFrameBuffer(FrameBufferHandle _handle, uint8_t _num, const Attachment* _attachment) = 0;
 		virtual void createFrameBuffer(FrameBufferHandle _handle, void* _nwh, uint32_t _width, uint32_t _height, TextureFormat::Enum _format, TextureFormat::Enum _depthFormat) = 0;
@@ -5190,6 +5194,36 @@ namespace bgfx
 			cmdbuf.write(_data);
 			cmdbuf.write(_mip);
 			return m_submit->m_frameNum + 2;
+		}
+
+		BGFX_API_FUNC(uint32_t exportTexture(TextureHandle _handle, ExternalTextureInfo& _info) )
+		{
+			BGFX_MUTEX_SCOPE(m_resourceApiLock);
+
+			BGFX_CHECK_HANDLE("exportTexture", m_textureHandle, _handle);
+
+			CommandBuffer& cmdbuf = getCommandBuffer(CommandBuffer::ExportTexture);
+			cmdbuf.write(_handle);
+			cmdbuf.write(&_info);
+			return m_submit->m_frameNum + 2;
+		}
+
+		BGFX_API_FUNC(void importTexture(TextureHandle _handle, const ExternalTextureInfo& _info) )
+		{
+			BGFX_MUTEX_SCOPE(m_resourceApiLock);
+
+			BGFX_CHECK_HANDLE("importTexture", m_textureHandle, _handle);
+
+			const TextureRef& ref = m_textureRef[_handle.idx];
+			if (ref.m_immutable)
+			{
+				BX_WARN(false, "Can't import to immutable texture.");
+				return;
+			}
+
+			CommandBuffer& cmdbuf = getCommandBuffer(CommandBuffer::ImportTexture);
+			cmdbuf.write(_handle);
+			cmdbuf.write(_info);
 		}
 
 		void resizeTexture(TextureHandle _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, uint16_t _numLayers)

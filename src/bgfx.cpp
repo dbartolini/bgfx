@@ -1638,6 +1638,7 @@ namespace bgfx
 		CAPS_FLAGS(BGFX_CAPS_VERTEX_ATTRIB_UINT10),
 		CAPS_FLAGS(BGFX_CAPS_VERTEX_ID),
 		CAPS_FLAGS(BGFX_CAPS_VIEWPORT_LAYER_ARRAY),
+		CAPS_FLAGS(BGFX_CAPS_EXTERNAL_MEMORY),
 #undef CAPS_FLAGS
 	};
 
@@ -3369,6 +3370,34 @@ namespace bgfx
 					_cmdbuf.read(mip);
 
 					m_renderCtx->readTexture(handle, data, mip);
+				}
+				break;
+
+			case CommandBuffer::ExportTexture:
+				{
+					BGFX_PROFILER_SCOPE("ExportTexture", kColorResource);
+
+					TextureHandle handle;
+					_cmdbuf.read(handle);
+
+					ExternalTextureInfo* info;
+					_cmdbuf.read(info);
+
+					m_renderCtx->exportTexture(handle, *info);
+				}
+				break;
+
+			case CommandBuffer::ImportTexture:
+				{
+					BGFX_PROFILER_SCOPE("ImportTexture", kColorResource);
+
+					TextureHandle handle;
+					_cmdbuf.read(handle);
+
+					ExternalTextureInfo info;
+					_cmdbuf.read(info);
+
+					m_renderCtx->importTexture(handle, info);
 				}
 				break;
 
@@ -5237,6 +5266,38 @@ namespace bgfx
 		BX_ASSERT(NULL != _data, "_data can't be NULL");
 		BGFX_CHECK_CAPS(BGFX_CAPS_TEXTURE_READ_BACK, "Texture read-back is not supported!");
 		return s_ctx->readTexture(_handle, _data, _mip);
+	}
+
+	uint32_t exportTexture(TextureHandle _handle, ExternalTextureInfo &_info)
+	{
+		BGFX_CHECK_CAPS(BGFX_CAPS_EXTERNAL_MEMORY, "Texture external is not supported!");
+
+		if (isValid(_handle) )
+		{
+			const TextureRef& ref = s_ctx->m_textureRef[_handle.idx];
+			BX_ASSERT(0 != (ref.m_flags & BGFX_TEXTURE_EXPORT)
+				, "Texture must be created with BGFX_TEXTURE_EXPORT flag."
+				);
+			BX_UNUSED(ref);
+		}
+
+		return s_ctx->exportTexture(_handle, _info);
+	}
+
+	void importTexture(TextureHandle _handle, const ExternalTextureInfo& _info)
+	{
+		BGFX_CHECK_CAPS(BGFX_CAPS_EXTERNAL_MEMORY, "Texture external is not supported!");
+
+		if (isValid(_handle) )
+		{
+			const TextureRef& ref = s_ctx->m_textureRef[_handle.idx];
+			BX_ASSERT(0 != (ref.m_flags & BGFX_TEXTURE_IMPORT)
+				, "Texture must be created with BGFX_TEXTURE_IMPORT flag."
+				);
+			BX_UNUSED(ref);
+		}
+
+		s_ctx->importTexture(_handle, _info);
 	}
 
 	FrameBufferHandle createFrameBuffer(uint16_t _width, uint16_t _height, TextureFormat::Enum _format, uint64_t _textureFlags)

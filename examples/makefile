@@ -4,6 +4,7 @@
 #
 
 all:
+	@make -s --no-print-directory build -C 51-external
 	@make -s --no-print-directory build -C 01-cubes
 #embedded @make -s --no-print-directory -C 02-metaballs
 	@make -s --no-print-directory build -C 03-raymarch

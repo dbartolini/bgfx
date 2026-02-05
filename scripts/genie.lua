@@ -572,6 +572,7 @@ or _OPTIONS["with-combined-examples"] then
 	if premake.gcc.namestyle == nil or not premake.gcc.namestyle == "Emscripten" then
 		exampleProject(false, false, "17-drawstress") -- 17-drawstress requires multithreading, does not compile for singlethreaded wasm
 		exampleProject(false, true,  "50-headless")   -- 50-headless is not tested with emscripten
+		exampleProject(false, true,  "51-external")
 	end
 
 	-- C99 source doesn't compile under WinRT settings

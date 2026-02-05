@@ -109,12 +109,23 @@
 			/* VK_KHR_get_physical_device_properties2 */                               \
 			VK_IMPORT_INSTANCE_FUNC(true,  vkGetPhysicalDeviceFeatures2KHR);           \
 			VK_IMPORT_INSTANCE_FUNC(true,  vkGetPhysicalDeviceMemoryProperties2KHR);   \
+			VK_IMPORT_INSTANCE_FUNC(true,  vkGetPhysicalDeviceFormatProperties2KHR);   \
+			VK_IMPORT_INSTANCE_FUNC(true,  vkGetPhysicalDeviceImageFormatProperties2KHR);\
 			/* VK_EXT_debug_report */                                                  \
 			VK_IMPORT_INSTANCE_FUNC(true,  vkCreateDebugReportCallbackEXT);            \
 			VK_IMPORT_INSTANCE_FUNC(true,  vkDestroyDebugReportCallbackEXT);           \
 			/* VK_KHR_fragment_shading_rate */                                         \
 			VK_IMPORT_INSTANCE_FUNC(true, vkGetPhysicalDeviceFragmentShadingRatesKHR); \
 			VK_IMPORT_INSTANCE_PLATFORM
+
+#if BX_PLATFORM_LINUX
+struct VkMemoryGetWin32HandleInfoKHR;
+struct HANDLE;
+typedef VkResult (VKAPI_PTR *PFN_vkGetMemoryWin32HandleKHR)(
+    VkDevice                                    device,
+    const VkMemoryGetWin32HandleInfoKHR*        pGetWin32HandleInfo,
+    HANDLE*                                     pHandle);
+#endif
 
 #define VK_IMPORT_DEVICE                                                              \
 			VK_IMPORT_DEVICE_FUNC(false, vkGetDeviceQueue);                           \
@@ -225,6 +236,12 @@
 			VK_IMPORT_DEVICE_FUNC(true,  vkCmdDrawIndexedIndirectCountKHR);           \
 			/* VK_KHR_fragment_shading_rate */                                        \
 			VK_IMPORT_DEVICE_FUNC(true, vkCmdSetFragmentShadingRateKHR);              \
+			/* VK_KHR_external_memory_fd */                                           \
+			VK_IMPORT_DEVICE_FUNC(true, vkGetMemoryFdKHR);                            \
+			/* VK_EXT_image_drm_format_modifier */                                    \
+			VK_IMPORT_DEVICE_FUNC(true, vkGetImageDrmFormatModifierPropertiesEXT);    \
+			/* VK_KHR_external_memory_win32 */                                        \
+			VK_IMPORT_DEVICE_FUNC(true, vkGetMemoryWin32HandleKHR);                   \
 
 #define VK_DESTROY                                \
 			VK_DESTROY_FUNC(Buffer);              \
@@ -754,6 +771,7 @@ VK_DESTROY_FUNC(DescriptorSet);
 
 		void update(VkCommandBuffer _commandBuffer, uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem);
 		void resolve(VkCommandBuffer _commandBuffer, uint8_t _resolve, uint32_t _layer, uint32_t _numLayers, uint32_t _mip);
+		void import(VkCommandBuffer _commandBuffer, const ExternalTextureInfo &_info);
 
 		void copyBufferToTexture(VkCommandBuffer _commandBuffer, VkBuffer _stagingBuffer, uint32_t _bufferImageCopyCount, VkBufferImageCopy* _bufferImageCopy);
 		VkImageLayout setImageMemoryBarrier(VkCommandBuffer _commandBuffer, VkImageLayout _newImageLayout, bool _singleMsaaImage = false);
@@ -791,7 +809,7 @@ VK_DESTROY_FUNC(DescriptorSet);
 		ReadbackVK m_readback;
 
 	private:
-		VkResult createImages(VkCommandBuffer _commandBuffer);
+		VkResult createImages(VkCommandBuffer _commandBuffer, const ExternalTextureInfo *_externalInfo = NULL);
 		static VkImageAspectFlags getAspectMask(VkFormat _format);
 	};
 

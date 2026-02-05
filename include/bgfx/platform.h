@@ -134,6 +134,50 @@ namespace bgfx
 		, uint64_t _flags = BGFX_TEXTURE_NONE|BGFX_SAMPLER_NONE
 		);
 
+	/// External Texture info.
+	///
+	/// @attention C99's equivalent binding is `bgfx_external_texture_info_t`.
+	///
+	struct ExternalTextureInfo
+	{
+		uint32_t stride;    //!< Texture stride.
+		uint32_t offset;    //!< Texture offset.
+		uint32_t size;      //!< Texture size.
+		uint32_t fourcc;    //!< Linux DRM fourcc.
+		uint64_t modifier;  //!< Linux DRM format modifier.
+		void* handle;       //!< Linux FD, or Windows HANDLE.
+	};
+
+	/// Export texture.
+	///
+	/// @param[in] _handle Texture handle.
+	/// @param[out] _info Texture info.
+	///
+	/// @returns Frame number when the result will be available. See: `bgfx::frame`.
+	///
+	/// @attention Texture must be created with `BGFX_TEXTURE_EXTERNAL` flag.
+	/// @attention Availability depends on: `BGFX_CAPS_EXTERNAL_MEMORY`.
+	/// @attention C99's equivalent binding is `bgfx_export_texture`.
+	///
+	uint32_t exportTexture(
+		  TextureHandle _handle
+		, ExternalTextureInfo& _info
+		);
+
+	/// Import texture.
+	///
+	/// @param[in] _handle Texture handle.
+	/// @param[in] _info Texture info.
+	///
+	/// @attention Texture must be created with `BGFX_TEXTURE_EXTERNAL` flag.
+	/// @attention Availability depends on: `BGFX_CAPS_EXTERNAL_MEMORY`.
+	/// @attention C99's equivalent binding is `bgfx_export_texture`.
+	///
+	void importTexture(
+		  TextureHandle _handle
+		, const ExternalTextureInfo& _info
+		);
+
 } // namespace bgfx
 
 #endif // BGFX_IDL_CPP

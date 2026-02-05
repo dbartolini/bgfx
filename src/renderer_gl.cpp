@@ -3476,6 +3476,14 @@ namespace bgfx { namespace gl
 			}
 		}
 
+		void exportTexture(TextureHandle /*_handle*/, ExternalTextureInfo& /*info*/) override
+		{
+		}
+
+		void importTexture(TextureHandle /*_handle*/, const ExternalTextureInfo& /*_info*/) override
+		{
+		}
+
 		void resizeTexture(TextureHandle _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, uint16_t _numLayers) override
 		{
 			TextureGL& texture = m_textures[_handle.idx];

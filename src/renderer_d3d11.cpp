@@ -1893,6 +1893,14 @@ namespace bgfx { namespace d3d11
 			m_deviceCtx->Unmap(texture.m_ptr, _mip);
 		}
 
+		void exportTexture(TextureHandle /*_handle*/, ExternalTextureInfo& /*info*/) override
+		{
+		}
+
+		void importTexture(TextureHandle /*_handle*/, const ExternalTextureInfo& /*_info*/) override
+		{
+		}
+
 		void resizeTexture(TextureHandle _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, uint16_t _numLayers) override
 		{
 			TextureD3D11& texture = m_textures[_handle.idx];
